@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Расписание · ФДМ-125</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   CSS VARIABLES & THEME
+═══════════════════════════════════════════ */
+:root {
+  --accent-blue: #4A9EFF;
+  --accent-teal: #34D9C3;
+  --accent-purple: #A78BFA;
+  --accent-pink: #F472B6;
+  --accent-orange: #FB923C;
+  --accent-green: #4ADE80;
+
+  --glass-bg: rgba(255,255,255,0.12);
+  --glass-bg-strong: rgba(255,255,255,0.18);
+  --glass-border: rgba(255,255,255,0.22);
+  --glass-border-strong: rgba(255,255,255,0.35);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  --glass-inner: inset 0 1px 0 rgba(255,255,255,0.3);
+
+  --blur: blur(20px);
+  --blur-strong: blur(32px);
+
+  --text-primary: rgba(255,255,255,0.95);
+  --text-secondary: rgba(255,255,255,0.65);
+  --text-tertiary: rgba(255,255,255,0.4);
+
+  --bg-primary: #0F1117;
+  --bg-secondary: #161820;
+  --bg-gradient: linear-gradient(135deg, #0F1117 0%, #161C2C 40%, #0F1117 100%);
+
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+
+  --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --transition: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --tab-height: 82px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Light theme */
+.light-theme {
+  --glass-bg: rgba(255,255,255,0.55);
+  --glass-bg-strong: rgba(255,255,255,0.72);
+  --glass-border: rgba(0,0,0,0.08);
+  --glass-border-strong: rgba(0,0,0,0.14);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  --glass-inner: inset 0 1px 0 rgba(255,255,255,0.8);
+  --text-primary: rgba(15,17,23,0.95);
+  --text-secondary: rgba(15,17,23,0.60);
+  --text-tertiary: rgba(15,17,23,0.38);
+  --bg-primary: #F0F4FF;
+  --bg-secondary: #E8EEFF;
+  --bg-gradient: linear-gradient(135deg, #EEF2FF 0%, #E0ECFF 40%, #EEF2FF 100%);
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; overscroll-behavior: none; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+/* Ambient background orbs */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+body::before {
+  width: 400px; height: 400px;
+  background: var(--accent-blue);
+  top: -100px; right: -100px;
+}
+body::after {
+  width: 350px; height: 350px;
+  background: var(--accent-purple);
+  bottom: 100px; left: -80px;
+}
+
+.light-theme body::before { opacity: 0.12; }
+.light-theme body::after { opacity: 0.10; }
+
+/* ═══════════════════════════════════════════
+   SPLASH SCREEN
+═══════════════════════════════════════════ */
+#splash {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--bg-gradient);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+#splash.hidden { opacity: 0; transform: scale(1.05); pointer-events: none; }
+
+.splash-icon {
+  width: 96px; height: 96px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  border-radius: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px;
+  box-shadow: 0 20px 60px rgba(74,158,255,0.4);
+  animation: splashPulse 2s ease-in-out infinite;
+}
+@keyframes splashPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 20px 60px rgba(74,158,255,0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 28px 80px rgba(74,158,255,0.6); }
+}
+
+.splash-title {
+  font-size: 28px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+.splash-subtitle {
+  font-size: 15px; color: var(--text-secondary);
+  font-weight: 500;
+}
+.splash-loader {
+  width: 48px; height: 4px;
+  background: var(--glass-bg);
+  border-radius: 2px; overflow: hidden;
+  margin-top: 8px;
+}
+.splash-loader::after {
+  content: '';
+  display: block; width: 40%; height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+  border-radius: 2px;
+  animation: loaderSlide 1.4s ease-in-out infinite;
+}
+@keyframes loaderSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* ═══════════════════════════════════════════
+   APP LAYOUT
+═══════════════════════════════════════════ */
+#app {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  padding-bottom: calc(var(--tab-height) + var(--safe-bottom));
+  opacity: 0; transition: opacity 0.4s ease;
+}
+#app.visible { opacity: 1; }
+
+/* ═══════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════ */
+.page {
+  display: none;
+  padding: 0 16px 20px;
+  animation: pageIn 0.4s var(--transition) both;
+}
+.page.active { display: block; }
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.page-header {
+  padding: 16px 0 12px;
+  position: sticky; top: 0; z-index: 50;
+}
+.page-header-inner {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-title {
+  font-size: 20px; font-weight: 800;
+  letter-spacing: -0.4px;
+}
+.header-subtitle {
+  font-size: 13px; color: var(--text-secondary);
+  font-weight: 500; margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════
+   WEEK SWITCHER
+═══════════════════════════════════════════ */
+.week-switcher {
+  display: flex;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 14px;
+  box-shadow: var(--glass-shadow);
+}
+.week-btn {
+  flex: 1; padding: 10px 12px;
+  border: none; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-secondary);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; position: relative;
+  transition: all 0.3s var(--transition-fast);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.week-btn.active {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  color: white;
+  box-shadow: 0 4px 16px rgba(74,158,255,0.35);
+}
+.week-btn .current-badge {
+  font-size: 9px; font-weight: 700;
+  background: rgba(255,255,255,0.3);
+  padding: 2px 5px; border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+.week-btn:not(.active) .current-badge { background: var(--accent-blue); color: white; }
+
+/* ═══════════════════════════════════════════
+   DAY TABS
+═══════════════════════════════════════════ */
+.day-tabs-wrapper {
+  overflow-x: auto; margin: 0 -16px; padding: 0 16px 4px;
+  scrollbar-width: none;
+}
+.day-tabs-wrapper::-webkit-scrollbar { display: none; }
+.day-tabs {
+  display: flex; gap: 8px; width: max-content;
+  padding-bottom: 2px;
+}
+.day-tab {
+  padding: 8px 14px; border: none; border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary); font-family: var(--font);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.3s var(--transition);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-width: 58px;
+}
+.day-tab.active {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  border-color: transparent; color: white;
+  box-shadow: 0 4px 16px rgba(74,158,255,0.35);
+  transform: translateY(-1px);
+}
+.day-tab.today:not(.active) { border-color: var(--accent-blue); color: var(--accent-blue); }
+.day-tab-name { font-size: 12px; font-weight: 700; }
+.day-tab-num { font-size: 18px; font-weight: 800; }
+
+/* ═══════════════════════════════════════════
+   TODAY WIDGET
+═══════════════════════════════════════════ */
+.today-widget {
+  background: linear-gradient(135deg, rgba(74,158,255,0.2), rgba(52,217,195,0.15));
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid rgba(74,158,255,0.3);
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+  position: relative; overflow: hidden;
+}
+.today-widget::before {
+  content: '';
+  position: absolute; top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(74,158,255,0.25), transparent);
+  border-radius: 50%; pointer-events: none;
+}
+.widget-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+  color: var(--accent-teal); text-transform: uppercase; margin-bottom: 8px;
+}
+.widget-subject {
+  font-size: 18px; font-weight: 800; letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+.widget-meta {
+  font-size: 13px; color: var(--text-secondary); font-weight: 500;
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.widget-time-left {
+  font-size: 12px; color: var(--accent-blue); font-weight: 700;
+  margin-top: 10px;
+  background: rgba(74,158,255,0.15);
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 20px;
+}
+.widget-split-hint {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+.widget-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+.widget-split-cell {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  min-width: 0;
+}
+.light-theme .widget-split-cell {
+  background: rgba(255,255,255,0.5);
+}
+
+/* ═══════════════════════════════════════════
+   CLASS CARDS
+═══════════════════════════════════════════ */
+.classes-list {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 14px;
+}
+.class-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+  display: flex; gap: 14px; align-items: flex-start;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s var(--transition), box-shadow 0.2s;
+  cursor: pointer;
+  animation: cardIn 0.4s var(--transition) both;
+}
+.class-card:active { transform: scale(0.98); }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.class-card:nth-child(1) { animation-delay: 0.05s; }
+.class-card:nth-child(2) { animation-delay: 0.10s; }
+.class-card:nth-child(3) { animation-delay: 0.15s; }
+.class-card:nth-child(4) { animation-delay: 0.20s; }
+.class-card:nth-child(5) { animation-delay: 0.25s; }
+
+.class-card.current {
+  border-color: rgba(74,158,255,0.4);
+  background: rgba(74,158,255,0.1);
+  box-shadow: 0 0 0 1px rgba(74,158,255,0.2), var(--glass-shadow);
+}
+.class-card.passed { opacity: 0.55; }
+
+/* Две пары одновременно (одна строка, два окна) */
+.class-card-split {
+  flex-wrap: nowrap;
+}
+.class-card-split .split-panes {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-width: 0;
+  align-self: stretch;
+}
+.split-pane {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  min-width: 0;
+  cursor: pointer;
+  transition: transform 0.2s var(--transition), border-color 0.2s;
+}
+.split-pane:active { transform: scale(0.98); }
+.class-card-split.current .split-pane {
+  border-color: rgba(74,158,255,0.35);
+  background: rgba(74,158,255,0.08);
+}
+.class-card-split.passed .split-pane { opacity: 0.55; }
+
+@media (max-width: 380px) {
+  .class-card-split .split-panes { gap: 6px; }
+  .split-pane { padding: 10px 8px; }
+}
+
+.card-accent {
+  width: 4px; min-height: 60px; border-radius: 2px;
+  flex-shrink: 0; margin: 2px 0;
+}
+.type-pr .card-accent { background: linear-gradient(180deg, var(--accent-blue), #6EC6FF); }
+.type-lk .card-accent { background: linear-gradient(180deg, var(--accent-purple), #C4B5FD); }
+.type-lb .card-accent { background: linear-gradient(180deg, var(--accent-teal), #67E8F9); }
+.type-pr { border-left: 3px solid rgba(74,158,255,0.3); }
+.type-lk { border-left: 3px solid rgba(167,139,250,0.3); }
+.type-lb { border-left: 3px solid rgba(52,217,195,0.3); }
+
+.card-time {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 50px; flex-shrink: 0;
+}
+.time-num { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.time-dot { width: 6px; height: 6px; border-radius: 50%; margin: 4px 0; }
+.type-pr .time-dot { background: var(--accent-blue); }
+.type-lk .time-dot { background: var(--accent-purple); }
+.type-lb .time-dot { background: var(--accent-teal); }
+.para-num {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+  color: var(--text-tertiary); text-transform: uppercase;
+}
+
+.card-body { flex: 1; min-width: 0; }
+.card-subject {
+  font-size: 15px; font-weight: 700;
+  letter-spacing: -0.2px; line-height: 1.3;
+  margin-bottom: 6px;
+}
+.card-type-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+  padding: 3px 8px; border-radius: 8px; margin-bottom: 8px;
+}
+.type-pr .card-type-badge { background: rgba(74,158,255,0.15); color: var(--accent-blue); }
+.type-lk .card-type-badge { background: rgba(167,139,250,0.15); color: var(--accent-purple); }
+.type-lb .card-type-badge { background: rgba(52,217,195,0.15); color: var(--accent-teal); }
+
+/* Подгруппы: 1 — красный маркер, 2 — жёлтый; без поля — для всех */
+.subgroup-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.subgroup-badge.sg-1 {
+  background: linear-gradient(135deg, #DC2626, #EF4444);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(220,38,38,0.35);
+}
+.subgroup-badge.sg-2 {
+  background: linear-gradient(135deg, #EAB308, #FACC15);
+  color: #1c1917;
+  box-shadow: 0 2px 10px rgba(234,179,8,0.35);
+}
+.light-theme .subgroup-badge.sg-2 { color: #422006; }
+
+.card-meta {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.meta-chip {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--text-secondary); font-weight: 500;
+}
+
+.card-note-btn {
+  position: absolute; bottom: 12px; right: 12px;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 4px 8px;
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  cursor: pointer; display: flex; align-items: center; gap: 3px;
+}
+
+.no-classes {
+  text-align: center; padding: 48px 20px;
+  color: var(--text-secondary);
+}
+.no-classes-icon { font-size: 48px; margin-bottom: 12px; }
+.no-classes-text { font-size: 16px; font-weight: 600; }
+.no-classes-sub { font-size: 13px; margin-top: 6px; opacity: 0.7; }
+
+/* ═══════════════════════════════════════════
+   STATS CARD (Today page)
+═══════════════════════════════════════════ */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+  margin-bottom: 14px;
+}
+.stat-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 12px; text-align: center;
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+}
+.stat-value {
+  font-size: 26px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -1px;
+}
+.stat-label {
+  font-size: 11px; color: var(--text-secondary);
+  font-weight: 600; margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════ */
+.progress-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+}
+.progress-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.progress-title { font-size: 15px; font-weight: 700; }
+.progress-pct {
+  font-size: 15px; font-weight: 800;
+  color: var(--accent-blue);
+}
+.progress-bar {
+  height: 8px; background: var(--glass-bg);
+  border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+  border-radius: 4px;
+  transition: width 1s var(--transition);
+}
+.progress-sub {
+  font-size: 12px; color: var(--text-secondary);
+  margin-top: 8px; font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════
+   NOTES PAGE
+═══════════════════════════════════════════ */
+.notes-list { display: flex; flex-direction: column; gap: 10px; }
+.note-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+  cursor: pointer;
+  transition: transform 0.2s var(--transition);
+}
+.note-card:active { transform: scale(0.98); }
+.note-card-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 8px; margin-bottom: 8px;
+}
+.note-card-title { font-size: 15px; font-weight: 700; }
+.note-card-date { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+.note-card-preview {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.5; font-weight: 400;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.note-card-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; padding: 3px 8px;
+  border-radius: 8px; margin-top: 8px;
+  background: rgba(74,158,255,0.15); color: var(--accent-blue);
+}
+
+.add-btn {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  border: none; border-radius: var(--radius-lg);
+  color: white; font-family: var(--font); font-size: 15px;
+  font-weight: 700; cursor: pointer; margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(74,158,255,0.35);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform 0.2s var(--transition), box-shadow 0.2s;
+}
+.add-btn:active { transform: scale(0.97); box-shadow: 0 4px 12px rgba(74,158,255,0.3); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  width: 100%;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 20px 20px calc(var(--safe-bottom) + 20px);
+  transform: translateY(100%);
+  transition: transform 0.4s var(--transition);
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  max-height: 85vh; overflow-y: auto;
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle {
+  width: 40px; height: 4px; background: var(--glass-border);
+  border-radius: 2px; margin: 0 auto 20px;
+}
+.modal-title { font-size: 20px; font-weight: 800; margin-bottom: 16px; }
+
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; display: block; }
+.form-input, .form-textarea {
+  width: 100%; background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  color: var(--text-primary); font-family: var(--font);
+  font-size: 15px; font-weight: 500; outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-textarea:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(74,158,255,0.15);
+}
+.form-textarea { min-height: 120px; resize: vertical; }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-save {
+  flex: 1; padding: 14px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  border: none; border-radius: var(--radius-md);
+  color: white; font-family: var(--font); font-size: 15px;
+  font-weight: 700; cursor: pointer;
+}
+.btn-cancel {
+  flex: 0.5; padding: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary); font-family: var(--font);
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════
+   TASKS PAGE
+═══════════════════════════════════════════ */
+.tasks-list { display: flex; flex-direction: column; gap: 8px; }
+.task-item {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s var(--transition-fast);
+}
+.task-item.done { opacity: 0.5; }
+.task-check {
+  width: 24px; height: 24px; border-radius: 8px;
+  border: 2px solid var(--glass-border);
+  background: transparent; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s var(--transition);
+}
+.task-check.checked {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  border-color: transparent;
+}
+.task-check.checked::after { content: '✓'; color: white; font-size: 13px; font-weight: 800; }
+.task-text {
+  flex: 1; font-size: 15px; font-weight: 500;
+  color: var(--text-primary);
+}
+.task-item.done .task-text { text-decoration: line-through; color: var(--text-tertiary); }
+.task-delete {
+  font-size: 18px; cursor: pointer; opacity: 0.4;
+  padding: 4px; line-height: 1;
+}
+
+/* ═══════════════════════════════════════════
+   POMODORO
+═══════════════════════════════════════════ */
+.pomodoro-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  text-align: center;
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+  margin-bottom: 14px;
+}
+.pomo-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--accent-orange); margin-bottom: 16px;
+}
+.pomo-timer-ring {
+  width: 160px; height: 160px; margin: 0 auto 20px;
+  position: relative;
+}
+.pomo-timer-ring svg { transform: rotate(-90deg); }
+.pomo-ring-bg { fill: none; stroke: var(--glass-border); stroke-width: 6; }
+.pomo-ring-fill {
+  fill: none; stroke: url(#pomoGrad); stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+.pomo-timer-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.pomo-time {
+  font-size: 36px; font-weight: 800; letter-spacing: -2px;
+  color: var(--text-primary);
+}
+.pomo-phase { font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-top: 2px; }
+.pomo-controls { display: flex; gap: 12px; justify-content: center; }
+.pomo-btn {
+  padding: 12px 28px; border-radius: var(--radius-md);
+  border: none; font-family: var(--font); font-size: 15px;
+  font-weight: 700; cursor: pointer;
+  transition: transform 0.2s var(--transition);
+}
+.pomo-btn:active { transform: scale(0.95); }
+.pomo-start {
+  background: linear-gradient(135deg, var(--accent-orange), #FBBF24);
+  color: white;
+  box-shadow: 0 6px 20px rgba(251,146,60,0.35);
+}
+.pomo-reset {
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+}
+.pomo-minutes-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.pomo-minutes-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.pomo-minutes-input {
+  width: 96px;
+  text-align: center;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font);
+  outline: none;
+}
+.pomo-minutes-input:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 3px rgba(251,146,60,0.2);
+}
+.pomo-minutes-input:disabled {
+  opacity: 0.55;
+}
+
+/* ═══════════════════════════════════════════
+   SETTINGS PAGE
+═══════════════════════════════════════════ */
+.settings-section { margin-bottom: 20px; }
+.settings-section-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--text-tertiary);
+  padding: 0 4px; margin-bottom: 8px;
+}
+.settings-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--glass-shadow);
+}
+.setting-row {
+  display: flex; align-items: center;
+  padding: 14px 16px; gap: 12px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.setting-info { flex: 1; }
+.setting-name { font-size: 15px; font-weight: 600; }
+.setting-desc { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+.toggle {
+  width: 50px; height: 28px; border-radius: 14px;
+  background: var(--glass-border); cursor: pointer;
+  position: relative; transition: background 0.3s;
+  flex-shrink: 0;
+}
+.toggle.on { background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal)); }
+.toggle::after {
+  content: ''; position: absolute;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: white; top: 3px; left: 3px;
+  transition: transform 0.3s var(--transition);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.toggle.on::after { transform: translateX(22px); }
+
+/* ═══════════════════════════════════════════
+   BOTTOM TAB BAR
+═══════════════════════════════════════════ */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 8px 16px calc(var(--safe-bottom) + 8px);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-strong);
+  -webkit-backdrop-filter: var(--blur-strong);
+  border-top: 1px solid var(--glass-border);
+  display: flex; gap: 4px;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  padding: 8px 4px;
+  border-radius: var(--radius-md);
+  cursor: pointer; border: none; background: transparent;
+  font-family: var(--font); transition: all 0.3s var(--transition);
+}
+.tab-item.active {
+  background: var(--glass-bg-strong);
+}
+.tab-icon {
+  width: 28px; height: 28px; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.3s var(--transition);
+}
+.tab-item.active .tab-icon { transform: scale(1.15); }
+.tab-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.2px;
+  color: var(--text-tertiary);
+}
+.tab-item.active .tab-label { color: var(--accent-blue); }
+
+/* Section label */
+.section-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--text-tertiary);
+  margin: 16px 0 8px 4px;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE TWEAKS
+═══════════════════════════════════════════ */
+@media (max-width: 360px) {
+  .stats-row { grid-template-columns: repeat(3,1fr); gap: 6px; }
+  .stat-value { font-size: 22px; }
+  .tab-label { font-size: 9px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-icon">📅</div>
+  <div class="splash-title">ФДМ-125</div>
+  <div class="splash-subtitle">Учебное расписание</div>
+  <div class="splash-loader"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- ── SCHEDULE PAGE ───────────────────────── -->
+  <div class="page active" id="page-schedule">
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="header-title">Расписание</div>
+          <div class="header-subtitle" id="schedule-date-label">Загрузка...</div>
+        </div>
+        <div style="font-size:24px">📆</div>
+      </div>
+    </div>
+
+    <div class="week-switcher">
+      <button class="week-btn" id="btn-odd" onclick="switchWeek('odd')">
+        Нечётная
+        <span class="current-badge" id="badge-odd" style="display:none">сейчас</span>
+      </button>
+      <button class="week-btn" id="btn-even" onclick="switchWeek('even')">
+        Чётная
+        <span class="current-badge" id="badge-even" style="display:none">сейчас</span>
+      </button>
+    </div>
+
+    <div class="day-tabs-wrapper">
+      <div class="day-tabs" id="day-tabs"></div>
+    </div>
+
+    <div id="today-widget-container"></div>
+    <div class="classes-list" id="classes-list"></div>
+  </div>
+
+  <!-- ── TODAY PAGE ──────────────────────────── -->
+  <div class="page" id="page-today">
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="header-title">Сегодня</div>
+          <div class="header-subtitle" id="today-full-date"></div>
+        </div>
+        <div style="font-size:24px">☀️</div>
+      </div>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="progress-card">
+      <div class="progress-header">
+        <div class="progress-title">Прогресс семестра</div>
+        <div class="progress-pct" id="sem-pct">0%</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="sem-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-sub" id="sem-sub">Семестр 2025–2026</div>
+    </div>
+
+    <!-- Таймер: любое число минут -->
+    <div class="pomodoro-card">
+      <div class="pomo-label">⏱ Таймер</div>
+      <div class="pomo-minutes-row">
+        <label for="timer-minutes-input">Минут</label>
+        <input type="number" class="pomo-minutes-input" id="timer-minutes-input"
+               min="1" max="999" step="1" value="25" inputmode="numeric"
+               title="От 1 до 999 минут">
+      </div>
+      <div class="pomo-timer-ring">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <defs>
+            <linearGradient id="pomoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#FB923C"/>
+              <stop offset="100%" style="stop-color:#FBBF24"/>
+            </linearGradient>
+          </defs>
+          <circle class="pomo-ring-bg" cx="80" cy="80" r="70"/>
+          <circle class="pomo-ring-fill" id="pomo-ring" cx="80" cy="80" r="70"
+                  stroke-dasharray="439.8" stroke-dashoffset="0"/>
+        </svg>
+        <div class="pomo-timer-text">
+          <div class="pomo-time" id="pomo-display">25:00</div>
+          <div class="pomo-phase" id="pomo-phase">Задайте время и нажмите «Старт»</div>
+        </div>
+      </div>
+      <div class="pomo-controls">
+        <button class="pomo-btn pomo-start" id="pomo-start-btn" onclick="pomodoroToggle()">▶ Старт</button>
+        <button class="pomo-btn pomo-reset" onclick="pomodoroReset()">↺ Сброс</button>
+      </div>
+    </div>
+
+    <div class="section-label">Пары сегодня</div>
+    <div class="classes-list" id="today-classes-list"></div>
+  </div>
+
+  <!-- ── NOTES PAGE ──────────────────────────── -->
+  <div class="page" id="page-notes">
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="header-title">Заметки</div>
+          <div class="header-subtitle">Домашние задания и записи</div>
+        </div>
+        <div style="font-size:24px">📝</div>
+      </div>
+    </div>
+
+    <button class="add-btn" onclick="openNoteModal()">
+      ＋ Новая заметка
+    </button>
+    <div class="notes-list" id="notes-list"></div>
+  </div>
+
+  <!-- ── TASKS PAGE ──────────────────────────── -->
+  <div class="page" id="page-tasks">
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="header-title">Задачи</div>
+          <div class="header-subtitle">Чек-лист недели</div>
+        </div>
+        <div style="font-size:24px">✅</div>
+      </div>
+    </div>
+
+    <button class="add-btn" onclick="openTaskModal()">
+      ＋ Добавить задачу
+    </button>
+    <div class="tasks-list" id="tasks-list"></div>
+  </div>
+
+  <!-- ── SETTINGS PAGE ──────────────────────────── -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="header-title">Настройки</div>
+          <div class="header-subtitle">ФДМ-125 · 2025–2026</div>
+        </div>
+        <div style="font-size:24px">⚙️</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Внешний вид</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <div class="setting-icon" style="background:rgba(74,158,255,0.15)">🌙</div>
+          <div class="setting-info">
+            <div class="setting-name">Тёмная тема</div>
+            <div class="setting-desc">Авто по системе Telegram</div>
+          </div>
+          <div class="toggle on" id="dark-toggle" onclick="toggleTheme()"></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon" style="background:rgba(52,217,195,0.15)">📳</div>
+          <div class="setting-info">
+            <div class="setting-name">Haptic feedback</div>
+            <div class="setting-desc">Вибрация при действиях</div>
+          </div>
+          <div class="toggle on" id="haptic-toggle" onclick="toggleHaptic()"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Расписание</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <div class="setting-icon" style="background:rgba(167,139,250,0.15)">📅</div>
+          <div class="setting-info">
+            <div class="setting-name">Группа</div>
+            <div class="setting-desc">ФДМ-125</div>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon" style="background:rgba(251,146,60,0.15)">📊</div>
+          <div class="setting-info">
+            <div class="setting-name">Семестр</div>
+            <div class="setting-desc">2 семестр 2025–2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Данные</div>
+      <div class="settings-card">
+        <div class="setting-row" onclick="clearAllData()" style="cursor:pointer">
+          <div class="setting-icon" style="background:rgba(248,113,113,0.15)">🗑️</div>
+          <div class="setting-info">
+            <div class="setting-name" style="color:#F87171">Очистить все данные</div>
+            <div class="setting-desc">Заметки, задачи, настройки</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM TAB BAR ─────────────────────── -->
+  <nav class="tab-bar">
+    <button class="tab-item active" id="tab-schedule" onclick="switchTab('schedule')">
+      <div class="tab-icon">📅</div>
+      <div class="tab-label">Расписание</div>
+    </button>
+    <button class="tab-item" id="tab-today" onclick="switchTab('today')">
+      <div class="tab-icon">☀️</div>
+      <div class="tab-label">Сегодня</div>
+    </button>
+    <button class="tab-item" id="tab-notes" onclick="switchTab('notes')">
+      <div class="tab-icon">📝</div>
+      <div class="tab-label">Заметки</div>
+    </button>
+    <button class="tab-item" id="tab-tasks" onclick="switchTab('tasks')">
+      <div class="tab-icon">✅</div>
+      <div class="tab-label">Задачи</div>
+    </button>
+    <button class="tab-item" id="tab-settings" onclick="switchTab('settings')">
+      <div class="tab-icon">⚙️</div>
+      <div class="tab-label">Настройки</div>
+    </button>
+  </nav>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="note-modal-title">Новая заметка</div>
+    <div class="form-group">
+      <label class="form-label">Заголовок</label>
+      <input class="form-input" id="note-title-input" placeholder="Например: Домашнее задание по математике" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Привязка к предмету (необязательно)</label>
+      <input class="form-input" id="note-subject-input" placeholder="Предмет или пара">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Заметка</label>
+      <textarea class="form-textarea" id="note-content-input" placeholder="Текст заметки..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeNoteModal()">Отмена</button>
+      <button class="btn-save" onclick="saveNote()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Новая задача</div>
+    <div class="form-group">
+      <label class="form-label">Задача</label>
+      <input class="form-input" id="task-text-input" placeholder="Что нужно сделать?" maxlength="120">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeTaskModal()">Отмена</button>
+      <button class="btn-save" onclick="saveTask()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   SCHEDULE DATA  (parsed from the images)
+   
+   Week types:
+   - "both"  = идёт на обеих неделях (без разделения)
+   - "odd"   = нечётная (верхняя)
+   - "even"  = чётная (нижняя)
+   
+   Пары:
+   I  = 8:30–10:00
+   II = 10:10–11:40
+   III= 12:10–13:40
+   IV = 13:50–15:20
+═══════════════════════════════════════════════════════ */
+const TIMES = {
+  1: { start: '8:30',  end: '10:00' },
+  2: { start: '10:10', end: '11:40' },
+  3: { start: '12:10', end: '13:40' },
+  4: { start: '13:50', end: '15:20' },
+};
+
+// Типы пар
+const TYPE_MAP = {
+  'ПР': 'pr', 'Пр': 'pr',
+  'ЛК': 'lk', 'Лк': 'lk',
+  'ЛБ': 'lb', 'Лб': 'lb',
+};
+
+/*  Структура занятия:
+    { para, week, subject, type, teacher, room, subgroup? }
+    или одновременные пары:
+    { para, week:'both', split: [ { subject, type, teacher, room, subgroup? }, ... ] } */
+
+const SCHEDULE = {
+  // 0=Вс, 1=Пн, 2=Вт, 3=Ср, 4=Чт, 5=Пт, 6=Сб (JS-совместимые)
+  1: [ // ПОНЕДЕЛЬНИК
+    { para:1, week:'odd',  subject:'Иностранный язык',       type:'pr', teacher:'Дусина Н.В., старший преподаватель',                             room:'303' },
+    { para:1, week:'even', subject:'Родной язык',             type:'lk', teacher:'Богданкина С.В., доц. / Водясова Л.П., проф. / Муртазина А.Ф.', room:'309/305а/303' },
+    { para:2, week:'both', subject:'Современный русский язык',type:'pr', teacher:'Горшкова Н.Н., доцент',                                          room:'312' },
+    { para:3, week:'odd',  subject:'История родной литературы',type:'lk',teacher:'Азыркина Е.И., доц. / Мазхаева С.Н., доц. / Ахапкин М.М., доц.',room:'307/305а/303' },
+    { para:3, week:'even', subject:'Безопасность жизнедеятельности',type:'pr',teacher:'Карабанова О.Н., доцент',                                   room:'308' },
+    { para:4, week:'odd',  subject:'Иностранный язык',        type:'pr', teacher:'Кирьякова О.В., старший преподаватель',                          room:'301' },
+    { para:4, week:'even', subject:'Речевые практики',         type:'pr', teacher:'Николаева Э.Е., преподаватель',                                  room:'302' },
+  ],
+  2: [ // ВТОРНИК
+    { para:1, week:'odd',  subject:'Технологии цифрового образования', type:'pr', teacher:'Храмов Д.А., старший преподаватель',           room:'Кластер Техника', subgroup:1 },
+    { para:1, week:'even', subject:'Элективные курсы по физической культуре и спорту', type:'pr', teacher:'Александров Д.Ю., старший преподаватель', room:'с/з' },
+    { para:2, week:'odd',  subject:'Современный русский язык (лекция)', type:'lk', teacher:'Горшкова Н.Н., доцент',                       room:'323' },
+    { para:2, week:'even', subject:'История родной литературы',          type:'lk', teacher:'Азыркина Е.И. / Мазхаева С.Н. / Ахапкин М.М., доц.',   room:'309/305а/300' },
+    { para:3, week:'odd',  subject:'Психология',                         type:'lk', teacher:'Савинова Т.В., доцент',                                 room:'323' },
+    { para:3, week:'even', subject:'Родной язык',                         type:'pr', teacher:'Богданкина С.В., доц. / Водясова Л.П., проф. / Муртазина А.Ф.', room:'309/305а/303' },
+    {
+      para: 4,
+      week: 'both',
+      split: [
+        { subject: 'Иностранный язык', type: 'pr', teacher: 'Дусина Н.В., старший преподаватель', room: '303' },
+        { subject: 'Технологии цифрового образования', type: 'pr', teacher: 'Храмов Д.А., старший преподаватель', room: '304', subgroup: 2 },
+      ],
+    },
+  ],
+  3: [ // СРЕДА
+    { para:1, week:'odd',  subject:'История России',            type:'pr', teacher:'Седышев О.В., доцент',         room:'301' },
+    { para:1, week:'even', subject:'Безопасность жизнедеятельности', type:'lk', teacher:'Карабанова О.Н., доцент', room:'323' },
+    { para:2, week:'both', subject:'История России',            type:'lk', teacher:'Седышев О.В., доцент',         room:'323' },
+    { para:3, week:'both', subject:'Элективные курсы по физической культуре и спорту', type:'pr', teacher:'Александров Д.Ю., старший преподаватель', room:'с/з' },
+    { para:4, week:'odd',  subject:'Речевые практики',          type:'pr', teacher:'Николаева Э.Е., преподаватель', room:'302' },
+    { para:4, week:'even', subject:'Технологии цифрового образования', type:'pr', teacher:'Храмов Д.А., старший преподаватель', room:'304', subgroup:2 },
+  ],
+  4: [ // ЧЕТВЕРГ
+    { para:1, week:'odd',  subject:'Мифология мордовского народа', type:'lk', teacher:'Девяткина Т.П., профессор', room:'309' },
+    { para:1, week:'even', subject:'Мифология мордовского народа', type:'pr', teacher:'Девяткина Т.П., профессор', room:'309' },
+    { para:2, week:'both', subject:'Основы медицинских знаний',    type:'pr', teacher:'Пожарова Г.В., доцент',      room:'УПП "Защита Родины"' },
+    { para:3, week:'both', subject:'Семьеведение',                  type:'pr', teacher:'',                           room:'317' },
+    { para:4, week:'both', subject:'Иностранный язык',              type:'pr', teacher:'Кирьякова О.В., старший преподаватель', room:'312' },
+  ],
+  5: [ // ПЯТНИЦА
+    { para:1, week:'both', subject:'Технологии цифрового образования', type:'pr', teacher:'Храмов Д.А., старший преподаватель', room:'304', subgroup:1 },
+    { para:2, week:'odd',  subject:'Основы медицинских знаний',        type:'lk', teacher:'Пожарова Г.В., доцент',               room:'323' },
+    { para:2, week:'even', subject:'Психология',                        type:'pr', teacher:'Савинова Т.В., доцент',               room:'312' },
+    { para:3, week:'both', subject:'Учебная технологическая практика', type:'pr', teacher:'Семиков М.Н., преподаватель',          room:'лаб. 4, ТУПК 1' },
+  ],
+  6: [], // СУББОТА - пусто
+  0: [], // ВОСКРЕСЕНЬЕ - пусто
+};
+
+const DAY_NAMES = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const DAY_NAMES_FULL = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const TYPE_LABELS = { pr: 'Практика', lk: 'Лекция', lb: 'Лаборатория' };
+const TYPE_ICONS  = { pr: '⚙️', lk: '📖', lb: '🔬' };
+
+function subgroupBadgeHtml(c) {
+  if (c.subgroup === 1) return '<div class="subgroup-badge sg-1">1 подгруппа</div>';
+  if (c.subgroup === 2) return '<div class="subgroup-badge sg-2">2 подгруппа</div>';
+  return '';
+}
+
+function classCardBodyHtml(c) {
+  return `
+    ${subgroupBadgeHtml(c)}
+    <div class="card-type-badge">${TYPE_ICONS[c.type]} ${TYPE_LABELS[c.type]}</div>
+    <div class="card-subject">${c.subject}</div>
+    <div class="card-meta">
+      ${c.room ? `<span class="meta-chip">🚪 ${c.room}</span>` : ''}
+      ${c.teacher ? `<span class="meta-chip">👤 ${c.teacher.split(',')[0]}</span>` : ''}
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   SEMESTER DATES (приблизительно)
+═══════════════════════════════════════════ */
+const SEM_START = new Date('2025-02-03');
+const SEM_END   = new Date('2025-06-21');
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+const now = new Date();
+
+// Определяем текущую неделю: верхняя (нечётная) если сегодня среда верхняя
+// Семестр начинается с понедельника 2025-02-03 (это нечётная/верхняя неделя)
+function getWeekType(date) {
+  const monday = new Date(SEM_START);
+  const msInWeek = 7 * 24 * 3600 * 1000;
+  const diffMs = date - monday;
+  const weekNum = Math.floor(diffMs / msInWeek); // 0-based
+  return weekNum % 2 === 0 ? 'odd' : 'even'; // odd=нечётная, even=чётная
+}
+
+// Согласно условию: сегодня среда, верхняя неделя → odd
+const CURRENT_WEEK = getWeekType(now);
+let selectedWeek = CURRENT_WEEK;
+let selectedDay = now.getDay(); // 0=Вс…6=Сб
+// Если воскресенье или суббота – показываем понедельник
+if (selectedDay === 0) selectedDay = 1;
+
+let currentTab = 'schedule';
+let notes = JSON.parse(localStorage.getItem('schedule_notes') || '[]');
+let tasks = JSON.parse(localStorage.getItem('schedule_tasks') || '[]');
+let settings = JSON.parse(localStorage.getItem('schedule_settings') || '{"haptic":true,"dark":true}');
+let editingNoteId = null;
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function haptic(type = 'light') {
+  if (!settings.haptic) return;
+  try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(type); } catch(e){}
+}
+
+function timeToMinutes(str) {
+  const [h, m] = str.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function nowMinutes() {
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+function getDayClasses(dayIndex, week) {
+  return (SCHEDULE[dayIndex] || []).filter(c =>
+    c.week === 'both' || c.week === week
+  ).sort((a,b) => a.para - b.para);
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long' });
+}
+
+/* ═══════════════════════════════════════════
+   RENDER SCHEDULE
+═══════════════════════════════════════════ */
+function renderSchedule() {
+  // Date label
+  const dateLabel = document.getElementById('schedule-date-label');
+  const todayDate = new Date(now);
+  todayDate.setHours(0,0,0,0);
+  const selDate = new Date(todayDate);
+  const diff = selectedDay - now.getDay();
+  selDate.setDate(selDate.getDate() + diff);
+  dateLabel.textContent = selDate.toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+
+  // Week badges
+  document.getElementById('badge-odd').style.display  = CURRENT_WEEK === 'odd'  ? 'inline' : 'none';
+  document.getElementById('badge-even').style.display = CURRENT_WEEK === 'even' ? 'inline' : 'none';
+  document.getElementById('btn-odd').classList.toggle('active', selectedWeek === 'odd');
+  document.getElementById('btn-even').classList.toggle('active', selectedWeek === 'even');
+
+  // Day tabs
+  const tabsEl = document.getElementById('day-tabs');
+  tabsEl.innerHTML = '';
+  // Mon–Sat
+  [1,2,3,4,5,6].forEach(d => {
+    const tabDate = new Date(todayDate);
+    tabDate.setDate(tabDate.getDate() + (d - now.getDay()));
+    const isToday = d === now.getDay();
+    const btn = document.createElement('button');
+    btn.className = 'day-tab' + (d === selectedDay ? ' active' : '') + (isToday ? ' today' : '');
+    const classes = getDayClasses(d, selectedWeek);
+    btn.innerHTML = `
+      <span class="day-tab-name">${DAY_NAMES[d]}</span>
+      <span class="day-tab-num">${tabDate.getDate()}</span>
+      ${classes.length ? `<span style="width:5px;height:5px;border-radius:50%;background:${isToday?'white':'var(--accent-blue)'}"></span>` : ''}
+    `;
+    btn.onclick = () => { selectedDay = d; haptic(); renderSchedule(); };
+    tabsEl.appendChild(btn);
+  });
+
+  // Today widget
+  renderTodayWidget();
+
+  // Classes list
+  const listEl = document.getElementById('classes-list');
+  const classes = getDayClasses(selectedDay, selectedWeek);
+  listEl.innerHTML = '';
+  if (!classes.length) {
+    listEl.innerHTML = `
+      <div class="no-classes">
+        <div class="no-classes-icon">🌴</div>
+        <div class="no-classes-text">Пар нет</div>
+        <div class="no-classes-sub">Выходной или окно в расписании</div>
+      </div>`;
+    return;
+  }
+  const nowM = nowMinutes();
+  classes.forEach((c, i) => {
+    const t = TIMES[c.para];
+    const startM = timeToMinutes(t.start);
+    const endM   = timeToMinutes(t.end);
+    const isCurrent = selectedDay === now.getDay() && nowM >= startM && nowM < endM;
+    const isPassed  = selectedDay === now.getDay() && nowM >= endM;
+    const card = document.createElement('div');
+
+    if (c.split && Array.isArray(c.split) && c.split.length) {
+      const primaryType = c.split[0].type || 'pr';
+      card.className = `class-card class-card-split type-${primaryType}${isCurrent ? ' current' : ''}${isPassed ? ' passed' : ''}`;
+      card.style.animationDelay = `${i * 0.05}s`;
+      card.innerHTML = `
+      <div class="card-time">
+        <div class="para-num">Пара ${c.para}</div>
+        <div class="time-num">${t.start}</div>
+        <div class="time-dot"></div>
+        <div class="time-num">${t.end}</div>
+      </div>
+      <div class="split-panes"></div>
+      ${isCurrent ? '<div style="position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;color:var(--accent-blue);background:rgba(74,158,255,0.15);padding:3px 8px;border-radius:10px;">▶ СЕЙЧАС</div>' : ''}
+      `;
+      const panesEl = card.querySelector('.split-panes');
+      c.split.forEach(slot => {
+        const pane = document.createElement('div');
+        pane.className = `split-pane type-${slot.type}`;
+        pane.innerHTML = classCardBodyHtml(slot);
+        pane.onclick = (e) => { e.stopPropagation(); haptic(); openNoteModal(slot.subject); };
+        panesEl.appendChild(pane);
+      });
+    } else {
+      card.className = `class-card type-${c.type}${isCurrent ? ' current' : ''}${isPassed ? ' passed' : ''}`;
+      card.style.animationDelay = `${i * 0.05}s`;
+      card.innerHTML = `
+      <div class="card-time">
+        <div class="para-num">Пара ${c.para}</div>
+        <div class="time-num">${t.start}</div>
+        <div class="time-dot"></div>
+        <div class="time-num">${t.end}</div>
+      </div>
+      <div class="card-body">
+        ${classCardBodyHtml(c)}
+      </div>
+      ${isCurrent ? '<div style="position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;color:var(--accent-blue);background:rgba(74,158,255,0.15);padding:3px 8px;border-radius:10px;">▶ СЕЙЧАС</div>' : ''}
+    `;
+      card.onclick = () => { haptic(); openNoteModal(c.subject); };
+    }
+    listEl.appendChild(card);
+  });
+}
+
+function renderTodayWidget() {
+  const container = document.getElementById('today-widget-container');
+  if (selectedDay !== now.getDay()) { container.innerHTML = ''; return; }
+  const classes = getDayClasses(now.getDay(), selectedWeek);
+  const nowM = nowMinutes();
+  let current = null, next = null;
+  for (const c of classes) {
+    const t = TIMES[c.para];
+    const s = timeToMinutes(t.start), e = timeToMinutes(t.end);
+    if (nowM >= s && nowM < e) { current = { ...c, t }; break; }
+    if (nowM < s && !next) { next = { ...c, t }; }
+  }
+  const shown = current || next;
+  if (!shown) { container.innerHTML = ''; return; }
+  const label = current ? '▶ Идёт сейчас' : '⏭ Следующая пара';
+  const minsLeft = current
+    ? timeToMinutes(shown.t.end) - nowM
+    : timeToMinutes(shown.t.start) - nowM;
+  const timeStr = current
+    ? `Ещё ${minsLeft} мин`
+    : `Через ${minsLeft} мин`;
+  const hasSplit = shown.split && Array.isArray(shown.split) && shown.split.length;
+  const bodyHtml = hasSplit
+    ? `<div class="widget-split-hint">Одновременно — разные аудитории</div>
+       <div class="widget-split-grid">
+         ${shown.split.map(s => `
+           <div class="widget-split-cell">
+             ${subgroupBadgeHtml(s)}
+             <div class="widget-subject" style="font-size:16px;margin-bottom:4px;">${s.subject}</div>
+             <div class="widget-meta" style="font-size:12px;">
+               ${s.room ? `<span>🚪 ${s.room}</span>` : ''}
+             </div>
+           </div>`).join('')}
+       </div>
+       <div class="widget-meta" style="margin-top:10px;">
+         <span>⏰ ${shown.t.start}–${shown.t.end}</span>
+       </div>`
+    : `${subgroupBadgeHtml(shown)}
+       <div class="widget-subject">${shown.subject}</div>
+       <div class="widget-meta">
+         <span>⏰ ${shown.t.start}–${shown.t.end}</span>
+         ${shown.room ? `<span>🚪 ${shown.room}</span>` : ''}
+       </div>`;
+  container.innerHTML = `
+    <div class="today-widget">
+      <div class="widget-label">${label}</div>
+      ${bodyHtml}
+      <div class="widget-time-left">⏱ ${timeStr}</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER TODAY PAGE
+═══════════════════════════════════════════ */
+function renderTodayPage() {
+  // Full date
+  document.getElementById('today-full-date').textContent = formatDate(now);
+
+  // Stats
+  const todayClasses = getDayClasses(now.getDay(), CURRENT_WEEK);
+  const weekClasses = [1,2,3,4,5].reduce((acc,d) => acc + getDayClasses(d, CURRENT_WEEK).length, 0);
+  const doneToday = todayClasses.filter(c => timeToMinutes(TIMES[c.para].end) < nowMinutes()).length;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value">${todayClasses.length}</div>
+      <div class="stat-label">Пар сегодня</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${weekClasses}</div>
+      <div class="stat-label">За неделю</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${doneToday}</div>
+      <div class="stat-label">Прошло</div>
+    </div>
+  `;
+
+  // Semester progress
+  const total = SEM_END - SEM_START;
+  const passed = Math.max(0, Math.min(total, now - SEM_START));
+  const pct = Math.round(passed / total * 100);
+  document.getElementById('sem-pct').textContent = pct + '%';
+  setTimeout(() => {
+    document.getElementById('sem-bar').style.width = pct + '%';
+  }, 200);
+  document.getElementById('sem-sub').textContent = `${pct}% от семестра позади`;
+
+  // Today's classes
+  const listEl = document.getElementById('today-classes-list');
+  listEl.innerHTML = '';
+  if (!todayClasses.length) {
+    listEl.innerHTML = `<div class="no-classes"><div class="no-classes-icon">🌴</div><div class="no-classes-text">Сегодня пар нет</div></div>`;
+    return;
+  }
+  todayClasses.forEach((c, i) => {
+    const t = TIMES[c.para];
+    const nowM = nowMinutes();
+    const endM = timeToMinutes(t.end);
+    const startM = timeToMinutes(t.start);
+    const isCurrent = nowM >= startM && nowM < endM;
+    const isPassed  = nowM >= endM;
+    const card = document.createElement('div');
+
+    if (c.split && Array.isArray(c.split) && c.split.length) {
+      const primaryType = c.split[0].type || 'pr';
+      card.className = `class-card class-card-split type-${primaryType}${isCurrent ? ' current' : ''}${isPassed ? ' passed' : ''}`;
+      card.style.animationDelay = `${i * 0.06}s`;
+      card.innerHTML = `
+      <div class="card-time">
+        <div class="para-num">Пара ${c.para}</div>
+        <div class="time-num">${t.start}</div>
+        <div class="time-dot"></div>
+        <div class="time-num">${t.end}</div>
+      </div>
+      <div class="split-panes"></div>`;
+      const panesEl = card.querySelector('.split-panes');
+      c.split.forEach(slot => {
+        const pane = document.createElement('div');
+        pane.className = `split-pane type-${slot.type}`;
+        pane.innerHTML = classCardBodyHtml(slot);
+        pane.onclick = (e) => { e.stopPropagation(); haptic(); openNoteModal(slot.subject); };
+        panesEl.appendChild(pane);
+      });
+    } else {
+      card.className = `class-card type-${c.type}${isCurrent ? ' current' : ''}${isPassed ? ' passed' : ''}`;
+      card.style.animationDelay = `${i * 0.06}s`;
+      card.innerHTML = `
+      <div class="card-time">
+        <div class="para-num">Пара ${c.para}</div>
+        <div class="time-num">${t.start}</div>
+        <div class="time-dot"></div>
+        <div class="time-num">${t.end}</div>
+      </div>
+      <div class="card-body">
+        ${classCardBodyHtml(c)}
+      </div>`;
+    }
+    listEl.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   NOTES
+═══════════════════════════════════════════ */
+function renderNotes() {
+  const listEl = document.getElementById('notes-list');
+  listEl.innerHTML = '';
+  if (!notes.length) {
+    listEl.innerHTML = `<div class="no-classes"><div class="no-classes-icon">📋</div><div class="no-classes-text">Нет заметок</div><div class="no-classes-sub">Нажмите «+» чтобы добавить</div></div>`;
+    return;
+  }
+  notes.slice().reverse().forEach(n => {
+    const card = document.createElement('div');
+    card.className = 'note-card';
+    card.innerHTML = `
+      <div class="note-card-header">
+        <div class="note-card-title">${n.title || 'Без названия'}</div>
+        <div class="note-card-date">${new Date(n.created).toLocaleDateString('ru-RU')}</div>
+      </div>
+      <div class="note-card-preview">${n.content || ''}</div>
+      ${n.subject ? `<div class="note-card-tag">📚 ${n.subject}</div>` : ''}
+    `;
+    card.onclick = () => openNoteModal(null, n);
+    listEl.appendChild(card);
+  });
+}
+
+function openNoteModal(presubject = null, existingNote = null) {
+  editingNoteId = existingNote ? existingNote.id : null;
+  document.getElementById('note-modal-title').textContent = existingNote ? 'Редактировать' : 'Новая заметка';
+  document.getElementById('note-title-input').value   = existingNote?.title   || '';
+  document.getElementById('note-subject-input').value = existingNote?.subject || presubject || '';
+  document.getElementById('note-content-input').value = existingNote?.content || '';
+  document.getElementById('note-modal').classList.add('open');
+  haptic('medium');
+}
+function closeNoteModal() {
+  document.getElementById('note-modal').classList.remove('open');
+  editingNoteId = null;
+}
+function saveNote() {
+  const title   = document.getElementById('note-title-input').value.trim();
+  const subject = document.getElementById('note-subject-input').value.trim();
+  const content = document.getElementById('note-content-input').value.trim();
+  if (!title && !content) { closeNoteModal(); return; }
+  if (editingNoteId) {
+    const idx = notes.findIndex(n => n.id === editingNoteId);
+    if (idx !== -1) notes[idx] = { ...notes[idx], title, subject, content };
+  } else {
+    notes.push({ id: Date.now(), title, subject, content, created: Date.now() });
+  }
+  localStorage.setItem('schedule_notes', JSON.stringify(notes));
+  closeNoteModal(); renderNotes(); haptic('medium');
+}
+
+/* ═══════════════════════════════════════════
+   TASKS
+═══════════════════════════════════════════ */
+function renderTasks() {
+  const listEl = document.getElementById('tasks-list');
+  listEl.innerHTML = '';
+  if (!tasks.length) {
+    listEl.innerHTML = `<div class="no-classes"><div class="no-classes-icon">✅</div><div class="no-classes-text">Задач нет</div><div class="no-classes-sub">Добавьте первую задачу</div></div>`;
+    return;
+  }
+  tasks.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'task-item' + (t.done ? ' done' : '');
+    item.innerHTML = `
+      <div class="task-check${t.done?' checked':''}" onclick="toggleTask(${t.id})"></div>
+      <div class="task-text">${t.text}</div>
+      <div class="task-delete" onclick="deleteTask(${t.id})">✕</div>
+    `;
+    listEl.appendChild(item);
+  });
+}
+function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; localStorage.setItem('schedule_tasks', JSON.stringify(tasks)); renderTasks(); haptic(); }
+}
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  localStorage.setItem('schedule_tasks', JSON.stringify(tasks)); renderTasks(); haptic();
+}
+function openTaskModal() {
+  document.getElementById('task-text-input').value = '';
+  document.getElementById('task-modal').classList.add('open'); haptic('medium');
+}
+function closeTaskModal() { document.getElementById('task-modal').classList.remove('open'); }
+function saveTask() {
+  const text = document.getElementById('task-text-input').value.trim();
+  if (!text) { closeTaskModal(); return; }
+  tasks.push({ id: Date.now(), text, done: false });
+  localStorage.setItem('schedule_tasks', JSON.stringify(tasks));
+  closeTaskModal(); renderTasks(); haptic('medium');
+}
+
+/* ═══════════════════════════════════════════
+   WEEK SWITCHER
+═══════════════════════════════════════════ */
+function switchWeek(w) {
+  selectedWeek = w; haptic(); renderSchedule();
+}
+
+/* ═══════════════════════════════════════════
+   TAB SWITCHER
+═══════════════════════════════════════════ */
+function switchTab(tab) {
+  haptic('light');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  currentTab = tab;
+  if (tab === 'today')    renderTodayPage();
+  if (tab === 'notes')    renderNotes();
+  if (tab === 'tasks')    renderTasks();
+}
+
+/* ═══════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════ */
+function applyTheme() {
+  if (settings.dark) {
+    document.documentElement.classList.remove('light-theme');
+  } else {
+    document.documentElement.classList.add('light-theme');
+  }
+  document.getElementById('dark-toggle').classList.toggle('on', settings.dark);
+  document.getElementById('haptic-toggle').classList.toggle('on', settings.haptic);
+}
+function toggleTheme() {
+  settings.dark = !settings.dark;
+  localStorage.setItem('schedule_settings', JSON.stringify(settings));
+  applyTheme(); haptic();
+}
+function toggleHaptic() {
+  settings.haptic = !settings.haptic;
+  localStorage.setItem('schedule_settings', JSON.stringify(settings));
+  applyTheme(); haptic();
+}
+function clearAllData() {
+  if (confirm('Удалить все заметки и задачи?')) {
+    notes = []; tasks = [];
+    localStorage.removeItem('schedule_notes');
+    localStorage.removeItem('schedule_tasks');
+    renderNotes(); renderTasks(); haptic('heavy');
+  }
+}
+
+/* ═══════════════════════════════════════════
+   ТАЙМЕР (любое число минут)
+═══════════════════════════════════════════ */
+let timerInterval = null;
+let timerRunning = false;
+let timerRemainingSec = 25 * 60;
+let timerTotalSec = 25 * 60;
+const POMO_CIRCUMFERENCE = 2 * Math.PI * 70;
+
+function readTimerMinutes() {
+  const el = document.getElementById('timer-minutes-input');
+  let m = parseInt(String(el && el.value !== '' ? el.value : '25'), 10);
+  if (!Number.isFinite(m) || m < 1) m = 1;
+  if (m > 999) m = 999;
+  el.value = String(m);
+  return m;
+}
+
+function pomodoroUpdate() {
+  const mins = Math.floor(Math.max(0, timerRemainingSec) / 60);
+  const secs = Math.max(0, timerRemainingSec) % 60;
+  document.getElementById('pomo-display').textContent =
+    `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  const total = Math.max(1, timerTotalSec);
+  const offset = POMO_CIRCUMFERENCE * (Math.max(0, timerRemainingSec) / total);
+  document.getElementById('pomo-ring').style.strokeDashoffset = POMO_CIRCUMFERENCE - offset;
+  const phaseEl = document.getElementById('pomo-phase');
+  if (timerRunning) {
+    phaseEl.textContent = 'Идёт отсчёт…';
+  } else if (timerRemainingSec <= 0) {
+    phaseEl.textContent = 'Время вышло';
+  } else if (timerRemainingSec < timerTotalSec) {
+    phaseEl.textContent = 'Пауза';
+  } else {
+    phaseEl.textContent = 'Нажмите «Старт»';
+  }
+}
+
+function pomodoroToggle() {
+  const btn = document.getElementById('pomo-start-btn');
+  const input = document.getElementById('timer-minutes-input');
+  if (!timerRunning) {
+    if (timerRemainingSec <= 0) {
+      const m = readTimerMinutes();
+      timerTotalSec = m * 60;
+      timerRemainingSec = timerTotalSec;
+    } else if (timerRemainingSec === timerTotalSec) {
+      const m = readTimerMinutes();
+      timerTotalSec = m * 60;
+      timerRemainingSec = timerTotalSec;
+    }
+    if (timerRemainingSec <= 0) return;
+    timerRunning = true;
+    input.disabled = true;
+    btn.textContent = '⏸ Пауза';
+    haptic('medium');
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timerRemainingSec--;
+      pomodoroUpdate();
+      if (timerRemainingSec <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerRunning = false;
+        input.disabled = false;
+        btn.textContent = '▶ Старт';
+        haptic('heavy');
+        alert('Время вышло ⏱');
+        const m = readTimerMinutes();
+        timerTotalSec = m * 60;
+        timerRemainingSec = timerTotalSec;
+        pomodoroUpdate();
+      }
+    }, 1000);
+  } else {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerRunning = false;
+    input.disabled = false;
+    btn.textContent = '▶ Продолжить';
+  }
+  pomodoroUpdate();
+}
+
+function pomodoroReset() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timerRunning = false;
+  const m = readTimerMinutes();
+  timerTotalSec = m * 60;
+  timerRemainingSec = timerTotalSec;
+  document.getElementById('pomo-start-btn').textContent = '▶ Старт';
+  const input = document.getElementById('timer-minutes-input');
+  if (input) input.disabled = false;
+  pomodoroUpdate();
+  haptic();
+}
+
+/* ═══════════════════════════════════════════
+   TELEGRAM WEBAPI INIT
+═══════════════════════════════════════════ */
+function initTelegram() {
+  try {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      // Auto theme from Telegram
+      const tgTheme = tg.colorScheme;
+      if (tgTheme === 'light') { settings.dark = false; }
+      else { settings.dark = true; }
+    }
+  } catch(e) {}
+}
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+function boot() {
+  initTelegram();
+  applyTheme();
+  const m0 = readTimerMinutes();
+  timerTotalSec = m0 * 60;
+  timerRemainingSec = timerTotalSec;
+  pomodoroUpdate();
+
+  // Show app after splash
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    renderSchedule();
+    renderTodayPage();
+  }, 1600);
+}
+
+// Modal close on backdrop click
+document.getElementById('note-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeNoteModal();
+});
+document.getElementById('task-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeTaskModal();
+});
+
+// Enter in task input
+document.getElementById('task-text-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveTask();
+});
+
+window.addEventListener('load', boot);
+</script>
+</body>
+</html>
